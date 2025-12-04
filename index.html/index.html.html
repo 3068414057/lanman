@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浪漫爱心-雯</title>
+    <style>
+        /* 页面整体样式：透视+居中，强化3D效果 */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            perspective: 1000px; /* 3D透视核心 */
+            overflow: hidden; /* 隐藏溢出元素 */
+            position: relative; /* 作为飘升小心心的定位参考 */
+        }
+
+        /* 星空背景 */
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* 背景光晕 */
+        .bg-glow {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: 1;
+            animation: pulse 15s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+
+        /* 爱心容器：整合3D旋转+心跳动画 + 缩短版发光滤镜 */
+        .heart-container {
+            transform-style: preserve-3d; /* 保留3D变换 */
+            animation: 
+                heartbeat 1.5s infinite ease-in-out,
+                rotate3d 8s infinite linear;
+            /* 核心：缩短发光范围 */
+            filter: drop-shadow(0 0 8px rgba(255, 62, 108, 0.9)) 
+                    drop-shadow(0 0 15px rgba(255, 62, 108, 0.6));
+            position: relative; /* 作为边缘散点的定位容器 */
+            z-index: 10; /* 保证大爱心在最上层 */
+            width: 100px;
+            height: 100px;
+        }
+
+        /* 3D爱心主体（无内层镂空）- 优化拼接消除白线 */
+        .heart {
+            width: 100px;
+            height: 100px;
+            transform: rotate(45deg);
+            background-color: #ff3e6c; /* 主色：玫红 */
+            position: relative;
+            /* 缩短基础边缘发光 */
+            box-shadow: 0 0 5px rgba(255, 62, 108, 1);
+            /* 关键：消除抗锯齿导致的白线 */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* 爱心左半圆 - 优化拼接+统一样式 */
+        .heart::before {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #ff3e6c;
+            top: -50px;
+            left: 0;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* 爱心右半圆 - 优化拼接+统一样式 */
+        .heart::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #ff3e6c;
+            top: 0;
+            left: -50px;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* --------------- 新增：爱心中心的"雯"字样式 --------------- */
+        .wen-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            /* 关键修改：移除旋转，精准调整位置让文字正立居中 */
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Microsoft Yahei', 'SimHei', sans-serif;
+            z-index: 11; /* 确保文字在爱心上层 */
+            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 10px rgba(255,255,255,0.5);
+            animation: text-glow 2s infinite alternate; /* 文字呼吸发光效果 */
+            /* 固定文字不随容器旋转偏移 */
+            pointer-events: none;
+        }
+
+        @keyframes text-glow {
+            0% { 
+                text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 10px rgba(255,255,255,0.5);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% { 
+                text-shadow: 0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,255,255,0.8), 0 0 20px rgba(255,62,108,0.8);
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+
+        /* --------------- 大爱心边缘散点样式 --------------- */
+        .particle {
+            position: absolute;
+            width: 1.5px; /* 超小尺寸，高密度不杂乱 */
+            height: 1.5px;
+            border-radius: 50%;
+            background-color: #ff3e6c;
+            opacity: 1;
+            pointer-events: none;
+            animation: particle-float 5s infinite ease-out; /* 散点飘散时长 */
+        }
+
+        /* 边缘散点飘散动画：围绕大爱心向外扩散 */
+        @keyframes particle-float {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* --------------- 底部飘升迷你小心心样式 --------------- */
+        .mini-heart {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            transform: rotate(45deg);
+            background-color: #ff3e6c;
+            opacity: 0; /* 初始透明，进入页面后显形 */
+            pointer-events: none;
+            animation: heart-float 7s infinite ease-out; /* 飘升时长 */
+            bottom: -20px; /* 初始在视窗外底部 */
+            left: calc(var(--x-pos) * 1px);
+            z-index: 5; /* 低于大爱心和边缘散点 */
+        }
+
+        /* 迷你爱心左半圆 */
+        .mini-heart::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: inherit; /* 继承颜色，同步换色 */
+            top: -4px;
+            left: 0;
+        }
+
+        /* 迷你爱心右半圆 */
+        .mini-heart::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: inherit;
+            top: 0;
+            left: -4px;
+        }
+
+        /* 迷你小心心飘升动画：从视窗外底部飘入，垂直向顶部 */
+        @keyframes heart-float {
+            0% {
+                transform: rotate(45deg) scale(0.8);
+                opacity: 0;
+                bottom: -20px; /* 视窗外底部 */
+            }
+            5% {
+                transform: rotate(45deg) scale(1);
+                opacity: 1;
+                bottom: 0; /* 页面底部显形 */
+            }
+            100% {
+                transform: rotate(45deg) translate(var(--offset-x), -100vh) scale(0);
+                opacity: 0;
+                bottom: 100vh; /* 超出顶部 */
+            }
+        }
+
+        /* --------------- 原有核心动画 --------------- */
+        @keyframes heartbeat {
+            0% { transform: scale(1) translateZ(0); }
+            15% { transform: scale(1.1) translateZ(20px); }
+            30% { transform: scale(1) translateZ(0); }
+            45% { transform: scale(1.1) translateZ(20px); }
+            60% { transform: scale(1) translateZ(0); }
+        }
+
+        @keyframes rotate3d {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* 点击提示样式 - 新增雯字提示 */
+        .click-hint {
+            position: absolute;
+            bottom: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Microsoft Yahei', 'SimHei', sans-serif;
+            font-size: 14px;
+            z-index: 20;
+            animation: fade 3s infinite alternate;
+        }
+
+        @keyframes fade {
+            0% { opacity: 0.6; transform: translateY(0); }
+            100% { opacity: 1; transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow" id="bgGlow"></div>
+    <div class="heart-container" id="heartContainer">
+        <div class="heart"></div>
+        <!-- 新增：爱心中心的"雯"字 -->
+        <div class="wen-text">雯</div>
+    </div>
+    <div class="click-hint">点击爱心更换颜色 ❤️ 雯</div>
+
+    <script>
+        // 创建星空背景
+        function createStars(count) {
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // 随机位置、大小和闪烁延迟
+                const size = Math.random() * 2 + 0.5;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                
+                document.body.appendChild(star);
+            }
+        }
+
+        // 点击换色（同步所有元素颜色）
+        const heart = document.querySelector('.heart');
+        const heartContainer = document.getElementById('heartContainer');
+        const bgGlow = document.getElementById('bgGlow');
+        const wenText = document.querySelector('.wen-text'); // 获取雯字元素
+        const colors = [
+            { hex: '#ff3e6c', rgb: '255, 62, 108' },   // 玫红
+            { hex: '#ff0000', rgb: '255, 0, 0' },       // 纯红
+            { hex: '#ff69b4', rgb: '255, 105, 180' },   // 粉色
+            { hex: '#ff9a00', rgb: '255, 154, 0' },     // 橙色
+            { hex: '#ffd700', rgb: '255, 215, 0' },     // 金色
+            { hex: '#00ffff', rgb: '0, 255, 255' },     // 青色
+            { hex: '#9d4edd', rgb: '157, 78, 221' }     // 紫色
+        ];
+        let colorIndex = 0;
+
+        // --------------- 1. 生成大爱心边缘散点 ---------------
+        function createParticles(count, color) {
+            // 清理旧散点（保留80个，避免卡顿）
+            const oldParticles = document.querySelectorAll('.particle');
+            if (oldParticles.length > 80) {
+                const deleteCount = Math.floor(oldParticles.length / 2);
+                oldParticles.forEach((p, index) => index < deleteCount && p.remove());
+            }
+
+            // 生成新散点（围绕大爱心边缘）
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // 随机分布在大爱心边缘
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 30 + Math.random() * 80; // 贴近大爱心
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                const floatX = Math.cos(angle) * (distance + 80 + Math.random() * 100);
+                const floatY = Math.sin(angle) * (distance + 80 + Math.random() * 100);
+
+                // 设置飘散路径
+                particle.style.setProperty('--x', `${floatX}px`);
+                particle.style.setProperty('--y', `${floatY}px`);
+                particle.style.left = `calc(50% - 0.75px + ${x}px)`;
+                particle.style.top = `calc(50% - 0.75px + ${y}px)`;
+                
+                // 颜色同步
+                particle.style.backgroundColor = color;
+                particle.style.boxShadow = `0 0 2px rgba(${colors[colorIndex].rgb}, 1)`;
+                particle.style.animationDelay = `${Math.random() * 1.5}s`;
+                
+                heartContainer.appendChild(particle);
+            }
+        }
+
+        // --------------- 2. 生成底部飘升迷你小心心 ---------------
+        function createMiniHearts(count, color) {
+            // 清理旧小心心（保留80个，避免卡顿）
+            const oldHearts = document.querySelectorAll('.mini-heart');
+            if (oldHearts.length > 80) {
+                const deleteCount = Math.floor(oldHearts.length / 2);
+                oldHearts.forEach((h, index) => index < deleteCount && h.remove());
+            }
+
+            // 生成新小心心（页面底部随机分布）
+            for (let i = 0; i < count; i++) {
+                const miniHeart = document.createElement('div');
+                miniHeart.classList.add('mini-heart');
+                
+                // 水平位置和轻微偏移
+                const xPos = Math.random() * window.innerWidth;
+                const offsetX = (Math.random() - 0.5) * 30; // ±15px偏移
+                const rotation = Math.random() * 30 - 15; // 轻微旋转角度
+
+                // 设置飘升路径
+                miniHeart.style.setProperty('--x-pos', xPos);
+                miniHeart.style.setProperty('--offset-x', `${offsetX}px`);
+                
+                // 颜色同步
+                miniHeart.style.backgroundColor = color;
+                miniHeart.style.boxShadow = `0 0 2px rgba(${colors[colorIndex].rgb}, 1)`;
+                miniHeart.style.animationDelay = `${Math.random() * 4}s`;
+                miniHeart.style.transform = `rotate(${45 + rotation}deg)`;
+                
+                document.body.appendChild(miniHeart);
+            }
+        }
+
+        // 初始化：创建星空、光晕、散点和飘升小心心
+        createStars(200);
+        createParticles(100, '#ff3e6c');
+        createMiniHearts(60, '#ff3e6c');
+
+        // 点击换色逻辑（同步所有元素）
+        heart.addEventListener('click', () => {
+            // 添加点击效果
+            heartContainer.style.animation = 'none';
+            setTimeout(() => {
+                heartContainer.style.animation = 'heartbeat 1.5s infinite ease-in-out, rotate3d 8s infinite linear';
+            }, 50);
+
+            colorIndex = (colorIndex + 1) % colors.length;
+            const currentColor = colors[colorIndex];
+            
+            // 1. 同步大爱心颜色
+            const style = document.createElement('style');
+            style.id = 'heart-color-style';
+            style.innerHTML = `
+                .heart, .heart::before, .heart::after {
+                    background-color: ${currentColor.hex} !important;
+                    box-shadow: none !important;
+                }
+                .heart { box-shadow: 0 0 5px rgba(${currentColor.rgb}, 1) !important; }
+                /* 同步雯字的发光效果颜色 */
+                .wen-text {
+                    text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 10px rgba(255,255,255,0.5), 0 0 15px rgba(${currentColor.rgb}, 0.8) !important;
+                }
+            `;
+            document.getElementById('heart-color-style')?.remove();
+            document.head.appendChild(style);
+
+            // 2. 同步大爱心发光滤镜
+            heartContainer.style.filter = `
+                drop-shadow(0 0 8px rgba(${currentColor.rgb}, 0.9)) 
+                drop-shadow(0 0 15px rgba(${currentColor.rgb}, 0.6))
+            `;
+
+            // 3. 同步背景光晕颜色
+            bgGlow.style.backgroundColor = currentColor.hex;
+
+            // 4. 同步生成新的散点和小心心（颜色一致）
+            createParticles(100, currentColor.hex);
+            createMiniHearts(60, currentColor.hex);
+        });
+
+        // 定时补充：持续生成散点和小心心，保持高密度
+        setInterval(() => {
+            createParticles(30, colors[colorIndex].hex);
+            createMiniHearts(25, colors[colorIndex].hex);
+        }, 1000);
+    </script>
+</body>
+</html>
